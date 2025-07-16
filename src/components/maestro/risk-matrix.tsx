@@ -57,7 +57,7 @@ export function RiskMatrix({ threats }: RiskMatrixProps) {
 
           {likelihoods.slice().reverse().map(likelihood => (
             <React.Fragment key={likelihood}>
-              <div className="p-2 text-sm writing-mode-vertical-rl rotate-180">{likelihood} Likelihood</div>
+              <div className="p-2 text-sm [writing-mode:vertical-rl]">{likelihood} Likelihood</div>
               {riskLevels.map(risk => {
                 const cellThreats = matrix[likelihood][risk];
                 return (
