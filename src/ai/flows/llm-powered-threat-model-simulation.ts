@@ -20,9 +20,16 @@ export type LLMPoweredThreatModelSimulationInput = z.infer<
   typeof LLMPoweredThreatModelSimulationInputSchema
 >;
 
-const LLMPoweredThreatModelSimulationOutputSchema = z.object({
-  threatModel: z.any().describe('The generated threat model as a JSON object.'),
+const ThreatSchema = z.object({
+  name: z.string().describe('The name of the threat.'),
+  description: z.string().describe('A detailed description of the threat.'),
+  risk: z.enum(['Low', 'Medium', 'High', 'Critical']).describe('The assessed risk level of the threat.'),
 });
+
+const LLMPoweredThreatModelSimulationOutputSchema = z.object({
+    threatModel: z.array(ThreatSchema).describe('The generated threat model as an array of threat objects.'),
+});
+
 export type LLMPoweredThreatModelSimulationOutput = z.infer<
   typeof LLMPoweredThreatModelSimulationOutputSchema
 >;
@@ -37,16 +44,19 @@ const prompt = ai.definePrompt({
   name: 'llmPoweredThreatModelSimulationPrompt',
   input: {schema: LLMPoweredThreatModelSimulationInputSchema},
   output: {schema: LLMPoweredThreatModelSimulationOutputSchema},
-  prompt: `You are a threat modeling expert simulating the response of the Gemini API.
+  prompt: `You are an expert AI security analyst specializing in threat modeling for complex AI agent systems using the MAESTRO framework.
 
-You are provided with a system description and a MAESTRO layer.
-Based on this information, generate a threat model in JSON format.
+Your task is to analyze the provided system description and identify potential threats within the specified MAESTRO layer.
 
-System Description: {{{systemDescription}}}
-MAESTRO Layer: {{{maestroLayer}}}
+Generate a list of 2-3 detailed and specific threats. For each threat, provide a name, a comprehensive description, and assess its risk level (Low, Medium, High, or Critical).
 
-Threat Model JSON:
-`,
+System Description:
+{{{systemDescription}}}
+
+MAESTRO Layer to Analyze:
+{{{maestroLayer}}}
+
+Return the output as a JSON object containing a 'threatModel' array. Each object in the array should represent a single threat and have 'name', 'description', and 'risk' fields. Ensure your analysis is directly relevant to the provided system and layer.`,
 });
 
 const llmPoweredThreatModelSimulationFlow = ai.defineFlow(
@@ -55,88 +65,12 @@ const llmPoweredThreatModelSimulationFlow = ai.defineFlow(
     inputSchema: LLMPoweredThreatModelSimulationInputSchema,
     outputSchema: LLMPoweredThreatModelSimulationOutputSchema,
   },
-  async input => {
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    const simulatedApiResponse = await getSimulatedApiResponse(
-      input.maestroLayer
-    );
-    const threatModel = JSON.parse(simulatedApiResponse);
-    return {threatModel};
+  async (input) => {
+    const { output } = await prompt(input);
+    if (!output) {
+      throw new Error("Failed to generate threat model from LLM.");
+    }
+    // The model now directly returns the object in the correct format.
+    return output;
   }
 );
-
-const simulatedResponses: Record<string, string> = {
-  'foundation-models': JSON.stringify([
-    {
-      name: 'Model Inversion Attack',
-      description: 'An attacker attempts to reconstruct sensitive training data by querying the model.',
-      risk: 'High',
-      layer: 'Foundation Models',
-    },
-    {
-      name: 'Membership Inference',
-      description: 'An attacker determines if a specific data record was part of the model\'s training set.',
-      risk: 'Medium',
-      layer: 'Foundation Models',
-    }
-  ]),
-  'data-operations': JSON.stringify([
-    {
-      name: 'Data Poisoning',
-      description: 'An attacker intentionally injects corrupted or misleading data into the training dataset to compromise model behavior.',
-      risk: 'High',
-      layer: 'Data Operations',
-    },
-    {
-      name: 'Sensitive Data Leakage in Logs',
-      description: 'PII or other sensitive information is inadvertently logged during data processing, creating a privacy risk.',
-      risk: 'Medium',
-      layer: 'Data Operations',
-    }
-  ]),
-  'agent-frameworks': JSON.stringify([
-    {
-      name: 'Prompt Injection',
-      description: 'An attacker crafts inputs that manipulate the agent into ignoring its original instructions and executing the attacker\'s commands.',
-      risk: 'Critical',
-      layer: 'Agent Frameworks',
-    },
-    {
-      name: 'Unintended Tool Use',
-      description: 'The agent misuses an integrated tool (e.g., a file system API or a web browser) in a way that leads to a security vulnerability, such as data exfiltration or remote code execution.',
-      risk: 'High',
-      layer: 'Agent Frameworks',
-    }
-  ]),
-  'deployment-infrastructure': JSON.stringify([
-      {
-        name: 'Insecure API Endpoints',
-        description: 'The API endpoints that expose the agent are not properly secured, allowing for unauthorized access, rate limit abuse, or denial of service attacks.',
-        risk: 'High',
-        layer: 'Deployment & Infrastructure',
-      },
-  ]),
-  'default': JSON.stringify([
-      {
-        name: 'Generic Simulated Threat',
-        description: 'This is a simulated threat for the selected layer. A real system description would produce more specific threats.',
-        risk: 'Low',
-        layer: 'Unknown',
-      }
-  ])
-};
-
-
-async function getSimulatedApiResponse(
-  maestroLayer: string
-): Promise<string> {
-    const layerKey = maestroLayer.toLowerCase().replace(/ & /g, '-').replace(/ /g, '-');
-    const response = simulatedResponses[layerKey] || simulatedResponses['default'];
-    // Add layer info to default response
-    if (!simulatedResponses[layerKey]) {
-        const defaultResponse = JSON.parse(simulatedResponses['default']);
-        defaultResponse[0].layer = maestroLayer;
-        return JSON.stringify(defaultResponse);
-    }
-    return response;
-}
