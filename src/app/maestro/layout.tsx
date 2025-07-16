@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import {
   SidebarProvider,
   Sidebar,
@@ -21,8 +21,7 @@ export default function MaestroLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const pathname = usePathname();
-  const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : new URLSearchParams();
+  const searchParams = useSearchParams();
   const activeLayer = searchParams.get('layer') || MAESTRO_LAYERS[0].id;
 
   return (
