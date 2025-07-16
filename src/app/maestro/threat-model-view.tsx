@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { useSearchParams } from 'next/navigation';
-import { MAESTRO_LAYERS, INITIAL_THREATS } from '@/lib/constants';
+import { MAESTRO_LAYERS, INITIAL_THREATS, DEFAULT_SYSTEM_DESCRIPTION } from '@/lib/constants';
 import type { Threat } from '@/lib/types';
 import { ThreatSimulationCard } from '@/components/maestro/threat-simulation-card';
 import { ThreatListCard } from '@/components/maestro/threat-list-card';
@@ -13,7 +13,7 @@ export function ThreatModelView() {
   const activeLayerId = searchParams.get('layer') || MAESTRO_LAYERS[0].id;
   const activeLayer = MAESTRO_LAYERS.find(l => l.id === activeLayerId) || MAESTRO_LAYERS[0];
   
-  const [systemDescription, setSystemDescription] = React.useState('');
+  const [systemDescription, setSystemDescription] = React.useState(DEFAULT_SYSTEM_DESCRIPTION);
   const [threats, setThreats] = React.useState<Threat[]>(INITIAL_THREATS);
 
   const addThreat = (newThreat: Omit<Threat, 'id'>) => {

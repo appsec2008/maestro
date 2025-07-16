@@ -24,3 +24,19 @@ export const INITIAL_THREATS: Threat[] = [
         layer: 'All',
     },
 ];
+
+export const DEFAULT_SYSTEM_DESCRIPTION = `An autonomous financial research agent designed to help investors.
+
+Core Functionality:
+- The agent ingests real-time financial news from various online sources (APIs, RSS feeds).
+- It uses a fine-tuned Large Language Model (LLM) based on a public finance-specific model to analyze sentiment and summarize articles.
+- The agent has access to a "tool" which is a Python function that connects to a vector database (Pinecone) containing historical stock performance data.
+- Based on the news analysis and historical data, the agent can autonomously decide to execute trades via an external brokerage API (e.g., Alpaca).
+- All actions, decisions, and data sources are logged for auditability.
+
+Technical Stack:
+- Agent Framework: LangChain
+- Foundation Model: Fine-tuned Llama 3 hosted on a private VPC in GCP.
+- Data Operations: Pinecone for vector search, PostgreSQL for storing user data and trade history.
+- Deployment: The agent runs in a Docker container on Google Kubernetes Engine (GKE).
+- External Integrations: Alpaca API for trading, various news APIs.`;
