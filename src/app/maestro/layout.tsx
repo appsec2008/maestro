@@ -42,15 +42,16 @@ export default function MaestroLayout({
               const Icon = layer.icon;
               return (
                 <SidebarMenuItem key={layer.id}>
-                  <Link href={`/maestro?layer=${layer.id}`} legacyBehavior passHref>
-                    <SidebarMenuButton
-                      isActive={activeLayer === layer.id}
-                      tooltip={layer.name}
-                    >
+                  <SidebarMenuButton
+                    asChild
+                    isActive={activeLayer === layer.id}
+                    tooltip={layer.name}
+                  >
+                    <Link href={`/maestro?layer=${layer.id}`}>
                       <Icon />
                       <span>{layer.name}</span>
-                    </SidebarMenuButton>
-                  </Link>
+                    </Link>
+                  </SidebarMenuButton>
                 </SidebarMenuItem>
               );
             })}
