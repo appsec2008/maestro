@@ -14,13 +14,13 @@ export const MAESTRO_LAYERS: MaestroLayer[] = [
 export const INITIAL_THREATS: Threat[] = [
     {
         id: 'threat-1',
-        name: 'Initial Example Threat',
-        description: 'This is a sample threat to demonstrate the tool\'s functionality. It exists across all layers for initial view.',
-        vulnerabilities: ['Lack of input validation'],
-        attackVectors: ['Crafted malicious input'],
-        risk: 'Medium',
-        mitigations: ['Implement strict input sanitization and validation.'],
-        tags: ['example', 'initial'],
+        name: 'Cross-Layer Information Leakage',
+        description: 'Sensitive data or system-level details from one layer are inadvertently exposed in the outputs or logs of another layer, potentially revealing vulnerabilities or confidential information.',
+        vulnerabilities: ['Insufficient data sanitization between layers', 'Verbose logging'],
+        attackVectors: ['Probing agent with specific inputs to trigger revealing error messages', 'Gaining access to system logs'],
+        risk: 'High',
+        mitigations: ['Implement strict data filtering and redaction at layer boundaries.', 'Configure logging levels to avoid exposing sensitive details in production.'],
+        tags: ['data-leakage', 'system-wide'],
         layer: 'All',
     },
 ];
