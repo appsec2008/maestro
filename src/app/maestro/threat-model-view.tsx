@@ -4,7 +4,7 @@ import * as React from 'react';
 import { useSearchParams } from 'next/navigation';
 import { MAESTRO_LAYERS, INITIAL_THREATS, DEFAULT_SYSTEM_DESCRIPTION } from '@/lib/constants';
 import type { Threat } from '@/lib/types';
-import { ThreatSimulationCard } from '@/components/maestro/threat-simulation-card';
+import { ThreatGenerationCard } from '@/components/maestro/threat-generation-card';
 import { ThreatListCard } from '@/components/maestro/threat-list-card';
 import { ThreatVisualsCard } from '@/components/maestro/threat-visuals-card';
 
@@ -59,7 +59,7 @@ export function ThreatModelView() {
       </header>
       <div className="grid flex-1 grid-cols-1 gap-6 lg:grid-cols-5">
         <div className="lg:col-span-2">
-            <ThreatSimulationCard
+            <ThreatGenerationCard
                 activeLayer={activeLayer}
                 systemDescription={systemDescription}
                 onSystemDescriptionChange={setSystemDescription}

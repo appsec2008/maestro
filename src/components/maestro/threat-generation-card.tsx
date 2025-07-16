@@ -5,31 +5,31 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { llmPoweredThreatModelSimulation } from '@/ai/flows/llm-powered-threat-model-simulation';
+import { llmPoweredThreatModel } from '@/ai/flows/llm-powered-threat-model';
 import type { MaestroLayer, Threat } from '@/lib/types';
 import { Sparkles } from 'lucide-react';
 
-interface ThreatSimulationCardProps {
+interface ThreatGenerationCardProps {
   activeLayer: MaestroLayer;
   systemDescription: string;
   onSystemDescriptionChange: (value: string) => void;
   onThreatsGenerated: (threats: Partial<Threat>[]) => void;
 }
 
-export function ThreatSimulationCard({
+export function ThreatGenerationCard({
   activeLayer,
   systemDescription,
   onSystemDescriptionChange,
   onThreatsGenerated,
-}: ThreatSimulationCardProps) {
+}: ThreatGenerationCardProps) {
   const [isLoading, setIsLoading] = React.useState(false);
   const { toast } = useToast();
 
-  const handleRunSimulation = async () => {
+  const handleRunAnalysis = async () => {
     if (!systemDescription.trim()) {
       toast({
         title: 'System Description Required',
-        description: 'Please describe your AI agent system before running the simulation.',
+        description: 'Please describe your AI agent system before running the analysis.',
         variant: 'destructive',
       });
       return;
@@ -37,7 +37,7 @@ export function ThreatSimulationCard({
 
     setIsLoading(true);
     try {
-      const result = await llmPoweredThreatModelSimulation({
+      const result = await llmPoweredThreatModel({
         systemDescription,
         maestroLayer: activeLayer.name,
       });
@@ -45,16 +45,16 @@ export function ThreatSimulationCard({
       if (result?.threatModel && Array.isArray(result.threatModel)) {
         onThreatsGenerated(result.threatModel);
         toast({
-          title: 'Simulation Complete',
+          title: 'Analysis Complete',
           description: `${result.threatModel.length} new threat(s) identified for the ${activeLayer.name} layer.`,
         });
       } else {
-        throw new Error('Invalid response from simulation.');
+        throw new Error('Invalid response from analysis.');
       }
     } catch (error) {
-      console.error('Threat simulation failed:', error);
+      console.error('Threat generation failed:', error);
       toast({
-        title: 'Simulation Failed',
+        title: 'Analysis Failed',
         description: 'Could not generate threats. Please try again.',
         variant: 'destructive',
       });
@@ -66,7 +66,7 @@ export function ThreatSimulationCard({
   return (
     <Card className="h-full">
       <CardHeader>
-        <CardTitle className="font-headline text-xl">LLM-Powered Simulation</CardTitle>
+        <CardTitle className="font-headline text-xl">LLM-Powered Analysis</CardTitle>
         <CardDescription>
           Describe your AI agent system to generate potential threats for the{' '}
           <span className="font-semibold text-accent">{activeLayer.name}</span> layer.
@@ -80,7 +80,7 @@ export function ThreatSimulationCard({
           className="min-h-[150px] text-sm"
           aria-label="System Description"
         />
-        <Button onClick={handleRunSimulation} disabled={isLoading}>
+        <Button onClick={handleRunAnalysis} disabled={isLoading}>
             {isLoading ? (
                 <>
                     <Sparkles className="mr-2 h-4 w-4 animate-spin" />
