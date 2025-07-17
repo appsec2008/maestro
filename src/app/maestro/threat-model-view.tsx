@@ -77,7 +77,7 @@ export function ThreatModelView() {
         </main>
       </div>
       <div className="w-full">
-        <ThreatVisualsCard threats={threats} />
+        <ThreatVisualsCard threats={threats} systemDescription={systemDescription} />
       </div>
     </div>
   );
