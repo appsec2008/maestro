@@ -49,13 +49,13 @@ Traditional security paradigms fall short when applied to the dynamic and non-de
     npm install
     ```
 
-3.  **Configure Environment Variables:**
-    Create a `.env` file in the root of the project. You can add your Google API key here if you plan to use it as the default model.
-    ```env
-    # Example for Google AI
-    NEXT_PUBLIC_GOOGLE_API_KEY=your_google_api_key_here
-    ```
-    Other models (OpenAI, Anthropic, Ollama, etc.) can be configured directly in the application's UI via the Settings panel.
+3.  **Configure AI Models:**
+    This application does not require a `.env` file for API keys. All model configurations are managed directly within the application's user interface.
+
+    *   Launch the application (see step 4).
+    *   Click the **Settings** (cog) icon in the sidebar.
+    *   Add and configure your desired AI models (e.g., Google Gemini, OpenAI, Together AI, or a local Ollama instance).
+    *   Your API keys are stored securely in your browser's local storage and are never exposed on the server.
 
 4.  **Run the development server:**
     The application runs on two parallel processes: the Next.js frontend and the Genkit AI backend.
@@ -80,13 +80,14 @@ The following diagram illustrates the high-level architecture of the MaestroVisi
 graph TD
     subgraph User Browser
         A[User] -->|Interacts with| B(Next.js Frontend);
+        B -->|Stores Keys/Configs in| J[Local Storage];
     end
 
     subgraph "MaestroVision Backend (Server Components & API Routes)"
-        B -->|Invokes| C{Genkit Flows};
+        B -->|Invokes Flow w/ Key| C{Genkit Flows};
     end
 
-    C -->|Selects Model (Round-Robin)| D[Model Selection Logic];
+    C -->|Selects Model w/ Key| D[Model Selection Logic];
 
     subgraph "Configured AI Models"
         D --> E[Google Gemini];
@@ -94,10 +95,6 @@ graph TD
         D --> G[Anthropic Claude];
         D --> H[Ollama (Local)];
         D --> I[... and others];
-    end
-
-    subgraph "Local Storage"
-        J[Model Configs & API Keys] <-.->|Load/Save| B;
     end
 
     style A fill:#4B0082,stroke:#fff,color:#fff
