@@ -16,16 +16,23 @@ const providers: Provider[] = [
   }),
 ];
 
-export const { handlers, auth, signIn, signOut } = NextAuth({
+const authOptions = {
   adapter: DrizzleAdapter(db),
   providers,
   pages: {
     signIn: '/api/auth/signin',
   },
   callbacks: {
-    async session({ session, user }) {
+    async session({ session, user }: {session: any, user: any}) {
       session.user.id = user.id;
       return session;
     },
   },
-});
+};
+
+export const {
+  handlers: { GET, POST },
+  auth,
+  signIn,
+  signOut,
+} = NextAuth(authOptions);
