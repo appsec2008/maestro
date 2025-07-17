@@ -1,6 +1,3 @@
-import { config } from 'dotenv';
-config({ path: '.env' });
-
 import { auth } from '@/app/api/auth/[...nextauth]/auth';
 import { NextResponse, type NextRequest } from 'next/server';
 
@@ -13,18 +10,11 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // If user is not logged in, redirect to sign-in page, unless they are already there.
+  // If user is not logged in, redirect to sign-in page
   if (!session) {
-    // To prevent redirect loops for the sign-in page.
-    // This is a simplified check. A more robust solution might be needed if you have multiple unauthenticated pages.
-    if (pathname.startsWith('/api/auth/signin')) {
-        return NextResponse.next();
-    }
     const signInUrl = new URL('/api/auth/signin', request.url);
-    if (request.url !== signInUrl.toString()) {
-        signInUrl.searchParams.set('callbackUrl', request.url);
-        return NextResponse.redirect(signInUrl);
-    }
+    signInUrl.searchParams.set('callbackUrl', request.url);
+    return NextResponse.redirect(signInUrl);
   }
 
   // If user is logged in, allow the request
