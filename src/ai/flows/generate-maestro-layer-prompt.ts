@@ -1,46 +1,19 @@
-// use server'
 'use server';
 
 /**
  * @fileOverview Generates prompts for the Gemini API based on MAESTRO layer, system description, threat templates, and risk factors.
  *
  * - generateMaestroLayerPrompt - A function that generates a prompt for a given MAESTRO layer.
- * - GenerateMaestroLayerPromptInput - The input type for the generateMaestroLayerPrompt function.
- * - GenerateMaestroLayerPromptOutput - The return type for the generateMaestroLayerPrompt function.
  */
 
 import {ai} from '@/ai/genkit';
-import {z} from 'genkit';
+import { 
+  GenerateMaestroLayerPromptInputSchema,
+  GenerateMaestroLayerPromptOutputSchema,
+  type GenerateMaestroLayerPromptInput,
+  type GenerateMaestroLayerPromptOutput
+} from '@/lib/schemas';
 
-const MaestroLayerSchema = z.enum([
-  'Foundation Models',
-  'Data Operations',
-  'Agent Frameworks',
-  'Deployment & Infrastructure',
-  'Evaluation & Observability',
-  'Security & Compliance',
-  'Agent Ecosystem',
-]);
-
-const GenerateMaestroLayerPromptInputSchema = z.object({
-  systemDescription: z
-    .string()
-    .describe('A description of the AI agent system being analyzed.'),
-  maestroLayer: MaestroLayerSchema.describe('The MAESTRO layer to generate a prompt for.'),
-  threatTemplates: z
-    .string()
-    .describe('A template of threats and vulnerabilities relevant to the MAESTRO layer.'),
-});
-export type GenerateMaestroLayerPromptInput = z.infer<
-  typeof GenerateMaestroLayerPromptInputSchema
->;
-
-const GenerateMaestroLayerPromptOutputSchema = z.object({
-  prompt: z.string().describe('The generated prompt for the Gemini API.'),
-});
-export type GenerateMaestroLayerPromptOutput = z.infer<
-  typeof GenerateMaestroLayerPromptOutputSchema
->;
 
 export async function generateMaestroLayerPrompt(
   input: GenerateMaestroLayerPromptInput

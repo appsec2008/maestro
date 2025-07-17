@@ -1,18 +1,10 @@
 'use client';
 
 import { z } from 'zod';
+import { ModelConfigSchema } from '@/lib/schemas';
 
 const MODEL_CONFIG_STORAGE_KEY = 'maestro-model-configs';
 const LAST_MODEL_INDEX_KEY = 'maestro-last-model-index';
-
-export const ModelConfigSchema = z.object({
-  id: z.string(),
-  provider: z.enum(['google', 'openai', 'together', 'ollama']),
-  modelId: z.string(),
-  apiKey: z.string().optional(),
-  baseURL: z.string().optional(),
-  label: z.string(),
-});
 
 export type ModelConfig = z.infer<typeof ModelConfigSchema>;
 
@@ -46,7 +38,7 @@ export function getModels(): ModelConfig[] {
   return [{
       id: 'default-google',
       provider: 'google',
-      modelId: 'gemini-2.0-flash',
+      modelId: 'gemini-1.5-flash-latest',
       label: 'Default Google Gemini',
       apiKey: process.env.NEXT_PUBLIC_GOOGLE_API_KEY || ''
   }];

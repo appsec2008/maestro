@@ -17,16 +17,8 @@ function configurePlugins(): GenkitPlugin[] {
   
   plugins.push(googleAI()); // Always available
   
-  // Do NOT initialize openai() here, as it requires an environment variable.
-  // The API key will be passed dynamically in getModelRef.
-
-  // Enable TogetherAI compatibility layer
-  plugins.push(
-    openAICompatible({
-      name: 'together',
-      baseURL: 'https://api.together.xyz/v1',
-    })
-  );
+  // Do NOT initialize openai() or openAICompatible() here, as they require an environment variable.
+  // The API keys will be passed dynamically in getModelRef.
 
   // Enable Ollama, assuming a default address.
   // The client can provide a different one if needed.

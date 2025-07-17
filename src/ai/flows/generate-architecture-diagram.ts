@@ -4,37 +4,16 @@
  * @fileOverview Generates a D3.js-compatible graph data structure from a system description.
  *
  * - generateArchitectureDiagram - A function that generates graph data.
- * - GenerateArchitectureDiagramInput - The input type for the generateArchitectureDiagram function.
- * - GenerateArchitectureDiagramOutput - The return type for the generateArchitectureDiagram function.
  */
 
 import { ai, getModelRef } from '@/ai/genkit';
-import { ModelConfigSchema } from '@/lib/models';
-import { z } from 'genkit';
+import { 
+    GenerateArchitectureDiagramInputSchema, 
+    GenerateArchitectureDiagramOutputSchema,
+    type GenerateArchitectureDiagramInput,
+    type GenerateArchitectureDiagramOutput
+} from '@/lib/schemas';
 
-const GenerateArchitectureDiagramInputSchema = z.object({
-  systemDescription: z.string().describe('A detailed description of the AI agent system.'),
-  model: ModelConfigSchema.describe('The AI model configuration to use for generation.'),
-});
-export type GenerateArchitectureDiagramInput = z.infer<typeof GenerateArchitectureDiagramInputSchema>;
-
-const NodeSchema = z.object({
-  id: z.string().describe('Unique identifier for the node (e.g., "user", "agentFramework").'),
-  label: z.string().describe('The display name of the node (e.g., "Investor", "LangChain Agent"). Keep it concise.'),
-  type: z.enum(['user', 'agent', 'container', 'database', 'external', 'service']).describe('The category of the node.'),
-});
-
-const LinkSchema = z.object({
-  source: z.string().describe('The id of the source node.'),
-  target: z.string().describe('The id of the target node.'),
-  label: z.string().optional().describe('An optional label for the link describing the interaction.'),
-});
-
-const GenerateArchitectureDiagramOutputSchema = z.object({
-  nodes: z.array(NodeSchema).describe('An array of all the nodes in the system.'),
-  links: z.array(LinkSchema).describe('An array of all the links connecting the nodes.'),
-});
-export type GenerateArchitectureDiagramOutput = z.infer<typeof GenerateArchitectureDiagramOutputSchema>;
 
 export async function generateArchitectureDiagram(
   input: GenerateArchitectureDiagramInput
