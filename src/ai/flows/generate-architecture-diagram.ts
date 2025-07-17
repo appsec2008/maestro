@@ -40,9 +40,9 @@ System Description:
 
 Instructions:
 1.  Analyze the system description to identify key software systems, containers (applications, data stores, microservices), and external dependencies.
-2.  Represent these components using MermaidJS syntax, specifically for a C4 diagram if possible, or a standard flowchart/graph if C4 is too complex for Mermaid.
+2.  Represent these components using MermaidJS syntax, specifically for a flowchart.
 3.  Show the relationships and data flow between components.
-4.  Do not include any explanations, just the raw MermaidJS code. Start with 'graph TD' or a similar Mermaid directive.
+4.  Do not include any explanations, just the raw MermaidJS code. The code must start with 'graph TD;'.
 
 Return the output as a JSON object containing the 'mermaidCode' field.`,
 });
