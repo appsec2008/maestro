@@ -8,20 +8,6 @@ import { useToast } from '@/hooks/use-toast';
 import { generateArchitectureDiagram } from '@/ai/flows/generate-architecture-diagram';
 import { Sparkles, Bot } from 'lucide-react';
 
-mermaid.initialize({
-  startOnLoad: false,
-  theme: 'base',
-  themeVariables: {
-    background: '#ffffff',
-    primaryColor: '#F9FAFB',
-    primaryTextColor: '#1F2937',
-    primaryBorderColor: '#E5E7EB',
-    lineColor: '#6B7280',
-    secondaryColor: '#E5E7EB',
-    tertiaryColor: '#F3F4F6',
-  }
-});
-
 interface ArchitectureDiagramProps {
   systemDescription: string;
 }
@@ -31,6 +17,39 @@ export function ArchitectureDiagram({ systemDescription }: ArchitectureDiagramPr
   const [isLoading, setIsLoading] = React.useState(false);
   const diagramRef = React.useRef<HTMLDivElement>(null);
   const { toast } = useToast();
+  
+  // Initialize Mermaid on the client side only
+  React.useEffect(() => {
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: 'base',
+      fontFamily: '"Inter", sans-serif',
+      useMaxWidth: true,
+      themeVariables: {
+        background: 'hsl(var(--background))',
+        primaryColor: 'hsl(var(--card))',
+        primaryTextColor: 'hsl(var(--card-foreground))',
+        primaryBorderColor: 'hsl(var(--border))',
+        lineColor: 'hsl(var(--primary))',
+        secondaryColor: 'hsl(var(--secondary))',
+        tertiaryColor: 'hsl(var(--muted))',
+        
+        // Node-specific colors for C4-like diagrams
+        nodeBorder: 'hsl(var(--accent))',
+        mainBkg: 'hsl(var(--accent))',
+        actorBkg: 'hsl(var(--primary))',
+        actorTextColor: 'hsl(var(--primary-foreground))',
+        
+        // Font sizes
+        fontSize: '16px',
+        
+        // Other theme variables
+        textColor: 'hsl(var(--foreground))',
+        errorBkgColor: 'hsl(var(--destructive))',
+        errorTextColor: 'hsl(var(--destructive-foreground))',
+      }
+    });
+  }, []);
 
   React.useEffect(() => {
     const renderDiagram = async () => {
@@ -109,7 +128,7 @@ export function ArchitectureDiagram({ systemDescription }: ArchitectureDiagramPr
             )}
           </Button>
         </div>
-        <div className="w-full min-h-[300px] p-4 border rounded-lg bg-gray-50 flex items-center justify-center">
+        <div className="w-full min-h-[300px] p-4 border rounded-lg bg-gray-50 flex items-center justify-center dark:bg-gray-900/20">
           {isLoading && <Bot className="h-16 w-16 text-muted-foreground animate-pulse" />}
           {!isLoading && !mermaidCode && (
              <div className="text-center text-muted-foreground">
