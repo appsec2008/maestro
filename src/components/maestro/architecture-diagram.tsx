@@ -24,30 +24,6 @@ export function ArchitectureDiagram({ systemDescription }: ArchitectureDiagramPr
       startOnLoad: false,
       theme: 'base',
       fontFamily: '"Inter", sans-serif',
-      useMaxWidth: true,
-      themeVariables: {
-        background: 'hsl(var(--background))',
-        primaryColor: 'hsl(var(--card))',
-        primaryTextColor: 'hsl(var(--card-foreground))',
-        primaryBorderColor: 'hsl(var(--border))',
-        lineColor: 'hsl(var(--primary))',
-        secondaryColor: 'hsl(var(--secondary))',
-        tertiaryColor: 'hsl(var(--muted))',
-        
-        // Node-specific colors for C4-like diagrams
-        nodeBorder: 'hsl(var(--accent))',
-        mainBkg: 'hsl(var(--accent))',
-        actorBkg: 'hsl(var(--primary))',
-        actorTextColor: 'hsl(var(--primary-foreground))',
-        
-        // Font sizes
-        fontSize: '16px',
-        
-        // Other theme variables
-        textColor: 'hsl(var(--foreground))',
-        errorBkgColor: 'hsl(var(--destructive))',
-        errorTextColor: 'hsl(var(--destructive-foreground))',
-      }
     });
   }, []);
 
