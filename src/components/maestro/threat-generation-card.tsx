@@ -8,6 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 import { llmPoweredThreatModel } from '@/ai/flows/llm-powered-threat-model';
 import type { MaestroLayer, Threat } from '@/lib/types';
 import { Sparkles } from 'lucide-react';
+import { selectModel } from '@/lib/models';
 
 interface ThreatGenerationCardProps {
   activeLayer: MaestroLayer;
@@ -26,6 +27,16 @@ export function ThreatGenerationCard({
   const { toast } = useToast();
 
   const handleRunAnalysis = async () => {
+    const selectedModel = selectModel();
+    if (!selectedModel) {
+        toast({
+            title: 'Model Not Configured',
+            description: 'Please configure an active AI model in the settings panel.',
+            variant: 'destructive',
+        });
+        return;
+    }
+
     if (!systemDescription.trim()) {
       toast({
         title: 'System Description Required',
@@ -40,6 +51,7 @@ export function ThreatGenerationCard({
       const result = await llmPoweredThreatModel({
         systemDescription,
         maestroLayer: activeLayer.name,
+        model: selectedModel,
       });
 
       if (result?.threatModel && Array.isArray(result.threatModel)) {

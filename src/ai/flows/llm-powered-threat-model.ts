@@ -8,12 +8,14 @@
  * - LLMPoweredThreatModelOutput - The return type for the llmPoweredThreatModel function.
  */
 
-import {ai, getSelectedModel} from '@/ai/genkit';
+import {ai, getModelRef} from '@/ai/genkit';
 import {z} from 'genkit';
+import { ModelConfigSchema, type ModelConfig } from '@/lib/models';
 
 const LLMPoweredThreatModelInputSchema = z.object({
   systemDescription: z.string().describe('Description of the AI agent system.'),
   maestroLayer: z.string().describe('The MAESTRO layer to generate the threat model for.'),
+  model: ModelConfigSchema.describe('The AI model configuration to use for generation.'),
 });
 export type LLMPoweredThreatModelInput = z.infer<
   typeof LLMPoweredThreatModelInputSchema
@@ -47,6 +49,8 @@ const llmPoweredThreatModelFlow = ai.defineFlow(
     outputSchema: LLMPoweredThreatModelOutputSchema,
   },
   async (input) => {
+    const modelRef = await getModelRef(input.model);
+
     const prompt = await ai.definePrompt({
       name: 'llmPoweredThreatModelPrompt',
       input: {schema: LLMPoweredThreatModelInputSchema},
@@ -64,7 +68,7 @@ MAESTRO Layer to Analyze:
 {{{maestroLayer}}}
 
 Return the output as a JSON object containing a 'threatModel' array. Each object in the array should represent a single threat and have 'name', 'description', and 'risk' fields. Ensure your analysis is directly relevant to the provided system and layer.`,
-      model: await getSelectedModel(),
+      model: modelRef,
     });
 
     const { output } = await prompt(input);

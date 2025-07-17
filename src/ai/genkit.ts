@@ -2,92 +2,66 @@
 
 import {genkit, GenkitPlugin, ModelReference} from 'genkit';
 import {googleAI} from '@genkit-ai/googleai';
-import {openai} from 'genkitx-openai';
+import {openAI as openai} from 'genkitx-openai';
 import { openAICompatible } from '@genkit-ai/compat-oai';
 import {ollama} from 'genkitx-ollama';
 
-import {getActiveModels, selectModel} from '@/lib/models';
 import type {ModelConfig} from '@/lib/models';
+import { getModels } from '@/lib/models';
 
 function configurePlugins(): GenkitPlugin[] {
   const plugins: GenkitPlugin[] = [];
-  const activeModels = getActiveModels();
-
-  const googleApiKeys = activeModels
-    .filter(m => m.provider === 'google' && m.apiKey)
-    .map(m => m.apiKey as string);
-
-  const openAiApiKeys = activeModels
-    .filter(m => m.provider === 'openai' && m.apiKey)
-    .map(m => m.apiKey as string);
-
-  const togetherConfigs = activeModels.filter(m => m.provider === 'together' && m.apiKey);
   
-  const ollamaConfigs = activeModels.filter(m => m.provider === 'ollama');
-
-  if (googleApiKeys.length > 0) {
-    plugins.push(googleAI({apiKey: googleApiKeys}));
-  }
-
-  if (openAiApiKeys.length > 0) {
-    plugins.push(openai({apiKey: openAiApiKeys[0]}));
-  }
+  // Note: Since we can't access localStorage on the server, we initialize plugins that don't strictly require keys at startup.
+  // The actual model used will be determined by the config passed from the client.
   
-  if (togetherConfigs.length > 0) {
-    plugins.push(
-      openAICompatible({
-        name: 'together',
-        apiKey: togetherConfigs[0].apiKey as string,
-        baseURL: 'https://api.together.xyz/v1',
-      })
-    );
-  }
+  plugins.push(googleAI()); // Always available
+  
+  // Do NOT initialize openai() here, as it requires an environment variable.
+  // The API key will be passed dynamically in getModelRef.
 
-  ollamaConfigs.forEach(config => {
-    plugins.push(
-      ollama({
-        models: [{name: config.modelId, type: 'generate'}],
-        serverAddress: config.baseURL || 'http://127.0.0.1:11434',
-      })
-    );
-  });
+  // Enable TogetherAI compatibility layer
+  plugins.push(
+    openAICompatible({
+      name: 'together',
+      baseURL: 'https://api.together.xyz/v1',
+    })
+  );
+
+  // Enable Ollama, assuming a default address.
+  // The client can provide a different one if needed.
+  plugins.push(
+    ollama({
+      models: [{name: 'llama3', type: 'generate'}], // A default model
+      serverAddress: 'http://127.0.0.1:11434',
+    })
+  );
 
   return plugins;
 }
 
-const plugins = configurePlugins();
-if (plugins.length === 0) {
-  plugins.push(googleAI());
-}
-
-
 export const ai = genkit({
-  plugins: plugins,
+  plugins: configurePlugins(),
 });
 
 export async function getModelRef(config: ModelConfig): Promise<ModelReference> {
+    const options: any = {};
+    if (config.apiKey) options.apiKey = config.apiKey;
+
     switch (config.provider) {
         case 'google':
             return googleAI.model(config.modelId);
         case 'openai':
-            return openai.model(config.modelId);
+            return openai.model(config.modelId, options);
         case 'together':
-            return {
+             return {
                 name: `together/${config.modelId}`,
-                uid: `together-plugin-together-${config.modelId}`,
+                uid: `together-plugin-${config.modelId}`,
+                config: { apiKey: config.apiKey },
             }
         case 'ollama':
-            return ollama.model(config.modelId);
+            return ollama.model(config.modelId, {serverAddress: config.baseURL});
         default:
             throw new Error(`Unsupported provider: ${config.provider}`);
     }
-}
-
-export async function getSelectedModel(): Promise<ModelReference> {
-    const selected = selectModel();
-    if (!selected) {
-        console.warn("No models configured, falling back to Gemini Flash. Please configure a model in Settings.");
-        return googleAI.model('gemini-1.5-flash-latest');
-    }
-    return await getModelRef(selected);
 }

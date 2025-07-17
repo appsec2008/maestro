@@ -8,11 +8,13 @@
  * - GenerateArchitectureDiagramOutput - The return type for the generateArchitectureDiagram function.
  */
 
-import { ai, getSelectedModel } from '@/ai/genkit';
+import { ai, getModelRef } from '@/ai/genkit';
+import { ModelConfigSchema } from '@/lib/models';
 import { z } from 'genkit';
 
 const GenerateArchitectureDiagramInputSchema = z.object({
   systemDescription: z.string().describe('A detailed description of the AI agent system.'),
+  model: ModelConfigSchema.describe('The AI model configuration to use for generation.'),
 });
 export type GenerateArchitectureDiagramInput = z.infer<typeof GenerateArchitectureDiagramInputSchema>;
 
@@ -47,6 +49,7 @@ const generateArchitectureDiagramFlow = ai.defineFlow(
     outputSchema: GenerateArchitectureDiagramOutputSchema,
   },
   async (input) => {
+    const modelRef = await getModelRef(input.model);
     
     const prompt = await ai.definePrompt({
       name: 'generateArchitectureDiagramPrompt',
@@ -80,7 +83,7 @@ Example Output Format:
   ]
 }
 `,
-      model: await getSelectedModel(),
+      model: modelRef,
     });
 
     const { output } = await prompt(input);

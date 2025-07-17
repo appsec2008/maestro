@@ -8,6 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 import { generateArchitectureDiagram } from '@/ai/flows/generate-architecture-diagram';
 import { Sparkles, Bot } from 'lucide-react';
 import { useTheme } from 'next-themes';
+import { selectModel } from '@/lib/models';
 
 interface ArchitectureDiagramProps {
   systemDescription: string;
@@ -136,6 +137,16 @@ export function ArchitectureDiagram({ systemDescription }: ArchitectureDiagramPr
   }, [graphData, resolvedTheme]);
 
   const handleGenerateDiagram = async () => {
+    const selectedModel = selectModel();
+    if (!selectedModel) {
+        toast({
+            title: 'Model Not Configured',
+            description: 'Please configure an active AI model in the settings panel.',
+            variant: 'destructive',
+        });
+        return;
+    }
+
     if (!systemDescription.trim()) {
       toast({
         title: 'System Description Required',
@@ -148,7 +159,7 @@ export function ArchitectureDiagram({ systemDescription }: ArchitectureDiagramPr
     setGraphData(null);
 
     try {
-      const result = await generateArchitectureDiagram({ systemDescription });
+      const result = await generateArchitectureDiagram({ systemDescription, model: selectedModel });
       if (result.nodes && result.links) {
         setGraphData(result);
         toast({
