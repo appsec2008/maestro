@@ -79,7 +79,7 @@ The following diagram illustrates the high-level architecture of the MaestroVisi
 ```mermaid
 graph TD
     subgraph User Browser
-        A[User] -->|Interacts with| B(Next.js Frontend);
+        A[User] -->|Interacts with| B[Next.js Frontend];
         B -->|Stores Keys/Configs in| J[Local Storage];
     end
 
@@ -93,7 +93,7 @@ graph TD
         D --> E[Google Gemini];
         D --> F[OpenAI GPT];
         D --> G[Anthropic Claude];
-        D --> H[Ollama (Local)];
+        D --> H[Ollama Local];
         D --> I[... and others];
     end
 
