@@ -1,5 +1,3 @@
-'use server';
-
 import {genkit, GenkitPlugin, ModelReference} from 'genkit';
 import {googleAI} from '@genkit-ai/googleai';
 import {openAI as openai} from 'genkitx-openai';
