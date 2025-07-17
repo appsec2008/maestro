@@ -8,7 +8,7 @@
  * - LLMPoweredThreatModelOutput - The return type for the llmPoweredThreatModel function.
  */
 
-import {ai} from '@/ai/genkit';
+import {ai, getSelectedModel} from '@/ai/genkit';
 import {z} from 'genkit';
 
 const LLMPoweredThreatModelInputSchema = z.object({
@@ -39,11 +39,19 @@ export async function llmPoweredThreatModel(
   return llmPoweredThreatModelFlow(input);
 }
 
-const prompt = ai.definePrompt({
-  name: 'llmPoweredThreatModelPrompt',
-  input: {schema: LLMPoweredThreatModelInputSchema},
-  output: {schema: LLMPoweredThreatModelOutputSchema},
-  prompt: `You are an expert AI security analyst specializing in threat modeling for complex AI agent systems using the MAESTRO framework.
+
+const llmPoweredThreatModelFlow = ai.defineFlow(
+  {
+    name: 'llmPoweredThreatModelFlow',
+    inputSchema: LLMPoweredThreatModelInputSchema,
+    outputSchema: LLMPoweredThreatModelOutputSchema,
+  },
+  async (input) => {
+    const prompt = await ai.definePrompt({
+      name: 'llmPoweredThreatModelPrompt',
+      input: {schema: LLMPoweredThreatModelInputSchema},
+      output: {schema: LLMPoweredThreatModelOutputSchema},
+      prompt: `You are an expert AI security analyst specializing in threat modeling for complex AI agent systems using the MAESTRO framework.
 
 Your task is to analyze the provided system description and identify potential threats within the specified MAESTRO layer.
 
@@ -56,15 +64,9 @@ MAESTRO Layer to Analyze:
 {{{maestroLayer}}}
 
 Return the output as a JSON object containing a 'threatModel' array. Each object in the array should represent a single threat and have 'name', 'description', and 'risk' fields. Ensure your analysis is directly relevant to the provided system and layer.`,
-});
+      model: await getSelectedModel(),
+    });
 
-const llmPoweredThreatModelFlow = ai.defineFlow(
-  {
-    name: 'llmPoweredThreatModelFlow',
-    inputSchema: LLMPoweredThreatModelInputSchema,
-    outputSchema: LLMPoweredThreatModelOutputSchema,
-  },
-  async (input) => {
     const { output } = await prompt(input);
     if (!output) {
       throw new Error("Failed to generate threat model from LLM.");

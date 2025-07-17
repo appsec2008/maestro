@@ -17,7 +17,7 @@ import {
 import { Settings, Cog } from 'lucide-react';
 import { MAESTRO_LAYERS } from '@/lib/constants';
 import { Logo } from '@/components/logo';
-import { ApiKeyDialog } from '@/components/maestro/api-key-dialog';
+import { ModelSettingsDialog } from '@/components/maestro/model-settings-dialog';
 
 export default function MaestroLayout({
   children,
@@ -26,7 +26,7 @@ export default function MaestroLayout({
 }) {
   const searchParams = useSearchParams();
   const activeLayer = searchParams.get('layer') || MAESTRO_LAYERS[0].id;
-  const [isApiDialogOpen, setIsApiDialogOpen] = React.useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = React.useState(false);
 
   return (
     <SidebarProvider>
@@ -63,7 +63,7 @@ export default function MaestroLayout({
         <SidebarFooter>
            <SidebarMenu>
               <SidebarMenuItem>
-                  <SidebarMenuButton onClick={() => setIsApiDialogOpen(true)} tooltip="Settings">
+                  <SidebarMenuButton onClick={() => setIsSettingsOpen(true)} tooltip="Settings">
                       <Cog />
                       <span>Settings</span>
                   </SidebarMenuButton>
@@ -73,7 +73,7 @@ export default function MaestroLayout({
       </Sidebar>
       <SidebarInset>
         {children}
-        <ApiKeyDialog open={isApiDialogOpen} onOpenChange={setIsApiDialogOpen} />
+        <ModelSettingsDialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen} />
       </SidebarInset>
     </SidebarProvider>
   );

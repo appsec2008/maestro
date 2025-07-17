@@ -8,7 +8,7 @@
  * - GenerateArchitectureDiagramOutput - The return type for the generateArchitectureDiagram function.
  */
 
-import { ai } from '@/ai/genkit';
+import { ai, getSelectedModel } from '@/ai/genkit';
 import { z } from 'genkit';
 
 const GenerateArchitectureDiagramInputSchema = z.object({
@@ -40,11 +40,19 @@ export async function generateArchitectureDiagram(
   return generateArchitectureDiagramFlow(input);
 }
 
-const prompt = ai.definePrompt({
-  name: 'generateArchitectureDiagramPrompt',
-  input: { schema: GenerateArchitectureDiagramInputSchema },
-  output: { schema: GenerateArchitectureDiagramOutputSchema },
-  prompt: `You are an expert system architect. Your task is to create a graph data structure in JSON format based on the provided system description. This structure will be used to render a diagram with D3.js.
+const generateArchitectureDiagramFlow = ai.defineFlow(
+  {
+    name: 'generateArchitectureDiagramFlow',
+    inputSchema: GenerateArchitectureDiagramInputSchema,
+    outputSchema: GenerateArchitectureDiagramOutputSchema,
+  },
+  async (input) => {
+    
+    const prompt = await ai.definePrompt({
+      name: 'generateArchitectureDiagramPrompt',
+      input: { schema: GenerateArchitectureDiagramInputSchema },
+      output: { schema: GenerateArchitectureDiagramOutputSchema },
+      prompt: `You are an expert system architect. Your task is to create a graph data structure in JSON format based on the provided system description. This structure will be used to render a diagram with D3.js.
 
 System Description:
 {{{systemDescription}}}
@@ -72,15 +80,9 @@ Example Output Format:
   ]
 }
 `,
-});
+      model: await getSelectedModel(),
+    });
 
-const generateArchitectureDiagramFlow = ai.defineFlow(
-  {
-    name: 'generateArchitectureDiagramFlow',
-    inputSchema: GenerateArchitectureDiagramInputSchema,
-    outputSchema: GenerateArchitectureDiagramOutputSchema,
-  },
-  async (input) => {
     const { output } = await prompt(input);
     if (!output) {
       throw new Error('Failed to generate architecture diagram from LLM.');
