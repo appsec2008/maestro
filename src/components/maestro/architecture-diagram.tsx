@@ -16,17 +16,23 @@ interface ArchitectureDiagramProps {
 const cleanupMermaidCode = (code: string): string => {
   let cleanedCode = code;
 
-  // Rule 1: Replace parentheses with brackets inside labels to avoid syntax errors
-  cleanedCode = cleanedCode.replace(/\(([^)]+)\)/g, '[$1]');
-
+  // Rule 1: Replace newlines inside node definitions with <br/> tags.
+  // This looks for patterns like: NodeId["Some text\nmore text"]
+  cleanedCode = cleanedCode.replace(/\["([^"]*)"\]/g, (match, content) => {
+    const newContent = content.replace(/\n/g, '<br/>');
+    return `["${newContent}"]`;
+  });
+  
   // Rule 2: Ensure any node text with special characters or spaces is quoted.
   // This regex finds nodes like `A[some text]` and ensures "some text" is quoted if needed.
   cleanedCode = cleanedCode.replace(
-    /(\w+\[)([^\]]+)(\])/g,
-    (match, start, content, end) => {
+    /(\w+\[)([^\]"']+)\]/g, // More specific to avoid already quoted content
+    (match, start, content) => {
       // If content isn't already quoted and contains characters that should be quoted
-      if (!content.startsWith('"') && /[\s-./(),\\]/.test(content)) {
-        return `${start}"${content.replace(/"/g, '')}"${end}`;
+      if (/[(){}\s-./,\\<>]/.test(content)) {
+          // Also replace internal newlines here as a fallback
+          const sanitizedContent = content.replace(/\n/g, '<br/>').replace(/"/g, "'");
+          return `${start}"${sanitizedContent}"]`;
       }
       return match; // Return original if no change needed
     }
