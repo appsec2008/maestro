@@ -42,7 +42,9 @@ Instructions:
 1.  Analyze the system description to identify key software systems, containers (applications, data stores, microservices), and external dependencies.
 2.  Represent these components using MermaidJS syntax, specifically for a flowchart.
 3.  Show the relationships and data flow between components.
-4.  Do not include any explanations, just the raw MermaidJS code. The code must start with 'graph TD;'.
+4.  The code must start with 'graph TD;'.
+5.  IMPORTANT: If any node text contains special characters like parentheses, brackets, or hyphens, you MUST enclose the entire text in double quotes. For example, use 'A["Node with (parentheses)"]' instead of 'A[Node with (parentheses)]'.
+6.  Do not include any explanations, just the raw MermaidJS code.
 
 Return the output as a JSON object containing the 'mermaidCode' field.`,
 });
