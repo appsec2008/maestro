@@ -12,6 +12,30 @@ interface ArchitectureDiagramProps {
   systemDescription: string;
 }
 
+// Function to clean up common Mermaid syntax errors from LLM output
+const cleanupMermaidCode = (code: string): string => {
+  let cleanedCode = code;
+
+  // Rule 1: Replace parentheses with brackets inside labels to avoid syntax errors
+  cleanedCode = cleanedCode.replace(/\(([^)]+)\)/g, '[$1]');
+
+  // Rule 2: Ensure any node text with special characters or spaces is quoted.
+  // This regex finds nodes like `A[some text]` and ensures "some text" is quoted if needed.
+  cleanedCode = cleanedCode.replace(
+    /(\w+\[)([^\]]+)(\])/g,
+    (match, start, content, end) => {
+      // If content isn't already quoted and contains characters that should be quoted
+      if (!content.startsWith('"') && /[\s-./(),\\]/.test(content)) {
+        return `${start}"${content.replace(/"/g, '')}"${end}`;
+      }
+      return match; // Return original if no change needed
+    }
+  );
+
+  return cleanedCode;
+};
+
+
 export function ArchitectureDiagram({ systemDescription }: ArchitectureDiagramProps) {
   const [mermaidCode, setMermaidCode] = React.useState('');
   const [isLoading, setIsLoading] = React.useState(false);
@@ -66,7 +90,8 @@ export function ArchitectureDiagram({ systemDescription }: ArchitectureDiagramPr
     try {
       const result = await generateArchitectureDiagram({ systemDescription });
       if (result.mermaidCode) {
-        setMermaidCode(result.mermaidCode);
+        const cleanedCode = cleanupMermaidCode(result.mermaidCode);
+        setMermaidCode(cleanedCode);
         toast({
           title: 'Diagram Generated',
           description: 'Architecture diagram has been successfully generated.',
