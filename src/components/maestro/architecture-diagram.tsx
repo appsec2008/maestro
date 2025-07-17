@@ -1,84 +1,139 @@
 'use client';
 
 import * as React from 'react';
-import mermaid from 'mermaid';
+import * as d3 from 'd3';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { generateArchitectureDiagram } from '@/ai/flows/generate-architecture-diagram';
 import { Sparkles, Bot } from 'lucide-react';
+import { useTheme } from 'next-themes';
 
 interface ArchitectureDiagramProps {
   systemDescription: string;
 }
 
-// Function to clean up common Mermaid syntax errors from LLM output
-const cleanupMermaidCode = (code: string): string => {
-  let cleanedCode = code;
+interface Node extends d3.SimulationNodeDatum {
+  id: string;
+  label: string;
+  type: string;
+}
 
-  // Rule 1: Replace newlines inside node definitions with <br/> tags.
-  // This looks for patterns like: NodeId["Some text\nmore text"]
-  cleanedCode = cleanedCode.replace(/\["([^"]*)"\]/g, (match, content) => {
-    const newContent = content.replace(/\n/g, '<br/>');
-    return `["${newContent}"]`;
-  });
-  
-  // Rule 2: Ensure any node text with special characters or spaces is quoted.
-  // This regex finds nodes like `A[some text]` and ensures "some text" is quoted if needed.
-  cleanedCode = cleanedCode.replace(
-    /(\w+\[)([^\]"']+)\]/g, // More specific to avoid already quoted content
-    (match, start, content) => {
-      // If content isn't already quoted and contains characters that should be quoted
-      if (/[(){}\s-./,\\<>]/.test(content)) {
-          // Also replace internal newlines here as a fallback
-          const sanitizedContent = content.replace(/\n/g, '<br/>').replace(/"/g, "'");
-          return `${start}"${sanitizedContent}"]`;
-      }
-      return match; // Return original if no change needed
-    }
-  );
+interface Link extends d3.SimulationLinkDatum<Node> {
+  source: string | Node;
+  target: string | Node;
+  label?: string;
+}
 
-  return cleanedCode;
+interface GraphData {
+  nodes: Node[];
+  links: Link[];
+}
+
+const nodeColors: Record<string, string> = {
+  user: 'hsl(var(--primary))',
+  agent: 'hsl(var(--accent))',
+  container: 'hsl(var(--secondary-foreground))',
+  database: '#34d399', // emerald-400
+  external: '#fb923c', // orange-400
+  service: '#60a5fa',  // blue-400
 };
 
-
 export function ArchitectureDiagram({ systemDescription }: ArchitectureDiagramProps) {
-  const [mermaidCode, setMermaidCode] = React.useState('');
+  const [graphData, setGraphData] = React.useState<GraphData | null>(null);
   const [isLoading, setIsLoading] = React.useState(false);
-  const diagramRef = React.useRef<HTMLDivElement>(null);
+  const svgRef = React.useRef<SVGSVGElement>(null);
   const { toast } = useToast();
-  
-  // Initialize Mermaid on the client side only
-  React.useEffect(() => {
-    mermaid.initialize({
-      startOnLoad: false,
-      theme: 'base',
-      fontFamily: '"Inter", sans-serif',
-    });
-  }, []);
+  const { resolvedTheme } = useTheme();
 
   React.useEffect(() => {
-    const renderDiagram = async () => {
-      if (mermaidCode && diagramRef.current) {
-        try {
-          diagramRef.current.innerHTML = ''; // Clear previous diagram
-          const { svg } = await mermaid.render(`mermaid-graph-${Date.now()}`, mermaidCode);
-          diagramRef.current.innerHTML = svg;
-        } catch (error) {
-          console.error('Mermaid rendering failed:', error);
-          toast({
-            title: 'Diagram Rendering Failed',
-            description: 'Could not render the architecture diagram.',
-            variant: 'destructive',
-          });
-          if (diagramRef.current) {
-            diagramRef.current.innerHTML = `<p class="text-destructive text-center">Failed to render diagram. The generated code may be invalid.</p><pre class="mt-2 p-2 bg-muted rounded-md text-xs">${mermaidCode}</pre>`;
-          }
-        }
+    if (!graphData || !svgRef.current) return;
+
+    const width = svgRef.current.parentElement?.clientWidth || 800;
+    const height = 500;
+
+    const svg = d3.select(svgRef.current)
+      .attr('width', width)
+      .attr('height', height)
+      .attr('viewBox', [-width / 2, -height / 2, width, height])
+      .style('max-width', '100%')
+      .style('height', 'auto');
+    
+    svg.selectAll("*").remove(); // Clear previous render
+
+    const links = graphData.links.map(d => ({ ...d }));
+    const nodes = graphData.nodes.map(d => ({ ...d }));
+
+    const simulation = d3.forceSimulation(nodes)
+      .force('link', d3.forceLink<Node, Link>(links).id(d => d.id).distance(100))
+      .force('charge', d3.forceManyBody().strength(-300))
+      .force('center', d3.forceCenter(0, 0))
+      .on('tick', ticked);
+
+    const link = svg.append('g')
+      .attr('stroke-opacity', 0.6)
+      .selectAll('line')
+      .data(links)
+      .join('line')
+      .attr('stroke', resolvedTheme === 'dark' ? '#4b5563' : '#9ca3af') // gray-600 dark:gray-500
+      .attr('stroke-width', 1.5);
+
+    const node = svg.append('g')
+      .selectAll('g')
+      .data(nodes)
+      .join('g')
+      .call(drag(simulation) as any);
+      
+    node.append('circle')
+      .attr('r', 20)
+      .attr('fill', d => nodeColors[d.type] || '#ccc')
+      .attr('stroke', resolvedTheme === 'dark' ? '#f9fafb' : '#1f2937') // gray-50 dark:gray-800
+      .attr('stroke-width', 2);
+    
+    node.append('text')
+      .text(d => d.label)
+      .attr('x', 0)
+      .attr('y', 35)
+      .attr('text-anchor', 'middle')
+      .attr('font-size', '12px')
+      .attr('font-family', 'Inter, sans-serif')
+      .attr('fill', resolvedTheme === 'dark' ? '#e5e7eb' : '#374151'); // gray-200 dark:gray-700
+      
+    function ticked() {
+      link
+        .attr('x1', d => (d.source as Node).x!)
+        .attr('y1', d => (d.source as Node).y!)
+        .attr('x2', d => (d.target as Node).x!)
+        .attr('y2', d => (d.target as Node).y!);
+
+      node.attr('transform', d => `translate(${d.x},${d.y})`);
+    }
+
+    function drag(simulation: d3.Simulation<Node, undefined>) {
+      function dragstarted(event: d3.D3DragEvent<any, Node, any>, d: Node) {
+        if (!event.active) simulation.alphaTarget(0.3).restart();
+        d.fx = d.x;
+        d.fy = d.y;
       }
-    };
-    renderDiagram();
-  }, [mermaidCode, toast]);
+      
+      function dragged(event: d3.D3DragEvent<any, Node, any>, d: Node) {
+        d.fx = event.x;
+        d.fy = event.y;
+      }
+      
+      function dragended(event: d3.D3DragEvent<any, Node, any>, d: Node) {
+        if (!event.active) simulation.alphaTarget(0);
+        d.fx = null;
+        d.fy = null;
+      }
+      
+      return d3.drag()
+        .on('start', dragstarted)
+        .on('drag', dragged)
+        .on('end', dragended);
+    }
+    
+  }, [graphData, resolvedTheme]);
 
   const handleGenerateDiagram = async () => {
     if (!systemDescription.trim()) {
@@ -90,14 +145,12 @@ export function ArchitectureDiagram({ systemDescription }: ArchitectureDiagramPr
       return;
     }
     setIsLoading(true);
-    setMermaidCode('');
-    if (diagramRef.current) diagramRef.current.innerHTML = '';
+    setGraphData(null);
 
     try {
       const result = await generateArchitectureDiagram({ systemDescription });
-      if (result.mermaidCode) {
-        const cleanedCode = cleanupMermaidCode(result.mermaidCode);
-        setMermaidCode(cleanedCode);
+      if (result.nodes && result.links) {
+        setGraphData(result);
         toast({
           title: 'Diagram Generated',
           description: 'Architecture diagram has been successfully generated.',
@@ -135,15 +188,15 @@ export function ArchitectureDiagram({ systemDescription }: ArchitectureDiagramPr
             )}
           </Button>
         </div>
-        <div className="w-full min-h-[300px] p-4 border rounded-lg bg-gray-50 flex items-center justify-center dark:bg-gray-900/20">
+        <div className="w-full min-h-[500px] p-0 border rounded-lg bg-card flex items-center justify-center relative">
           {isLoading && <Bot className="h-16 w-16 text-muted-foreground animate-pulse" />}
-          {!isLoading && !mermaidCode && (
+          {!isLoading && !graphData && (
              <div className="text-center text-muted-foreground">
                 <Bot className="h-16 w-16 mx-auto mb-2" />
                 <p>Click "Generate Architecture Diagram" to visualize your system.</p>
             </div>
           )}
-          <div ref={diagramRef} className="w-full flex justify-center items-center" />
+          <svg ref={svgRef} className={!graphData ? 'hidden' : ''}></svg>
         </div>
       </CardContent>
     </Card>
