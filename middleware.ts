@@ -1,9 +1,11 @@
 
-import { auth } from '@/auth';
+import NextAuth from 'next-auth';
+import authConfig from '@/auth.config';
 import { NextResponse, type NextRequest } from 'next/server';
 
-export async function middleware(request: NextRequest) {
-  const session = await auth();
+const { auth } = NextAuth(authConfig);
+
+export default auth((request) => {
   const { pathname } = request.nextUrl;
 
   // Allow access to auth routes and API routes
@@ -12,15 +14,15 @@ export async function middleware(request: NextRequest) {
   }
 
   // If user is not logged in, redirect to sign-in page
-  if (!session) {
+  if (!request.auth) {
     const signInUrl = new URL('/api/auth/signin', request.url);
-    signInUrl.searchParams.set('callbackUrl', request.url);
+    signInUrl.searchParams.set('callbackUrl', request.nextUrl.pathname);
     return NextResponse.redirect(signInUrl);
   }
 
   // If user is logged in, allow the request
   return NextResponse.next();
-}
+});
 
 export const config = {
   matcher: [
