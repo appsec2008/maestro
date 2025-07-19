@@ -1,10 +1,5 @@
 
-import NextAuth from 'next-auth';
-import authConfig from '@/auth.config';
-
-// The middleware is initialized with the database-free authConfig.
-// This ensures no Node.js modules are pulled into the Edge runtime.
-const { auth } = NextAuth(authConfig);
+import { auth } from '@/auth';
 
 export default auth;
 
