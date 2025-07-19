@@ -79,23 +79,12 @@ export default function MaestroLayout({
   const [isSettingsOpen, setIsSettingsOpen] = React.useState(false);
   const { data: session, status } = useSession();
 
-  const isAuthPage = pathname === '/api/auth/signin';
-
-  if (status === 'loading' && !isAuthPage) {
+  if (status === 'loading') {
      return (
         <div className="flex min-h-screen items-center justify-center">
             <Logo className="size-16 animate-pulse" />
         </div>
      );
-  }
-
-  if (!session && !isAuthPage) {
-      // The user is not authenticated, and they are not on the sign-in page.
-      // The auth middleware should handle redirection, but this is a fallback.
-      // In a client component, we might need a useEffect to redirect,
-      // but the middleware should be the primary guard.
-      // For now, we show a simplified view or a message.
-      // If you have a custom sign-in page, you can render it here or part of it.
   }
 
   return (
