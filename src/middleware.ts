@@ -1,4 +1,4 @@
-import { auth } from '@/app/api/auth/[...nextauth]/auth';
+import { auth } from '@/auth';
 import { NextResponse, type NextRequest } from 'next/server';
 
 export async function middleware(request: NextRequest) {
