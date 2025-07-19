@@ -3,7 +3,7 @@
 
 import * as React from 'react';
 import Link from 'next/link';
-import { usePathname, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import {
   SidebarProvider,
   Sidebar,
@@ -15,7 +15,7 @@ import {
   SidebarInset,
   SidebarFooter,
 } from '@/components/ui/sidebar';
-import { Settings, Cog, LogOut, User } from 'lucide-react';
+import { Cog, LogOut } from 'lucide-react';
 import { MAESTRO_LAYERS } from '@/lib/constants';
 import { Logo } from '@/components/logo';
 import { ModelSettingsDialog } from '@/components/maestro/model-settings-dialog';
@@ -73,11 +73,10 @@ export default function MaestroLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const pathname = usePathname();
   const searchParams = useSearchParams();
   const activeLayer = searchParams.get('layer') || MAESTRO_LAYERS[0].id;
   const [isSettingsOpen, setIsSettingsOpen] = React.useState(false);
-  const { data: session, status } = useSession();
+  const { status } = useSession({ required: true });
 
   if (status === 'loading') {
      return (
